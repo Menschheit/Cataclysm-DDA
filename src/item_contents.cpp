@@ -271,10 +271,12 @@ void item_contents::combine( const item_contents &read_input )
             std::advance( current_pocket_iter, pocket_index );
 
             for( const item *it : pocket.all_items_top() ) {
-                if( it->is_gunmod() || it->is_toolmod() ) {
-                    if( !insert_item( *it, item_pocket::pocket_type::MOD ).success() ) {
-                        uninserted_items.push_back( *it );
-                    }
+                //try to save mods if they are not accessible anymore
+                //may not be the right way but should be compatible with most saves.
+                if( ( it->is_gunmod() || it->is_toolmod() ) &&
+                    !current_pocket_iter->is_type( item_pocket::pocket_type::CONTAINER ) ) {
+                    insert_item( *it, item_pocket::pocket_type::MOD );
+
                 } else {
                     const ret_val<item_pocket::contain_code> inserted = current_pocket_iter->insert_item( *it );
                     if( !inserted.success() ) {
@@ -298,9 +300,9 @@ void item_contents::combine( const item_contents &read_input )
     }
 
     for( const item &uninserted_item : uninserted_items ) {
-        if( !insert_item( uninserted_item, item_pocket::pocket_type::MOD ).success() ) {
-            insert_item( uninserted_item, item_pocket::pocket_type::MIGRATION );
-        }
+
+        insert_item( uninserted_item, item_pocket::pocket_type::MIGRATION );
+
     }
 }
 
